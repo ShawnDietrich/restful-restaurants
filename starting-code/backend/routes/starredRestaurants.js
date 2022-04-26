@@ -48,24 +48,85 @@ router.get("/", (req, res) => {
 /**
  * Feature 7: Getting a specific starred restaurant.
  */
+router.get("/:id", (req, res) => {
+  const id = req.params;
 
+  const restaurant = ALL_RESTAURANTS.find((restaurant) => restaurant.id === id);
 
+  if (!restaurant) {
+    res.status(404).send("Not found");
+    return;
+  }
+  res.json(restaurant);
+});
 
 /**
  * Feature 8: Adding to your list of starred restaurants.
  */
+router.post("/", (req, res) => {
+  //read in name of restaurant
+  const { name, comment } = req.body;
 
+  //find the restaurant in the list first
+  const foundRestaurant = STARRED_RESTAURANTS.find(
+    (restaurant) => restaurant.name === name
+  );
 
+  if (!foundRestaurant) {
+    res.status(404).send("Restaurant Not Found");
+    return;
+  }
+
+  //create a new ID for the stared restaurant
+  const newId = uuidv4();
+  //create a new record for the starred restaurant
+  const starredRestaurant = {
+    id: foundRestaurant.id,
+    restaurantId: newId,
+    comment: comment,
+  };
+  //push the new record to the starred restaurant array
+  STARRED_RESTAURANTS.push(starredRestaurant);
+
+  //send result to the frontend
+  res.json(starredRestaurant);
+});
 
 /**
  * Feature 9: Deleting from your list of starred restaurants.
  */
+router.delete("/:id", (req, res) => {
+  const id = req.params;
 
+  //filter out the restauratnt to delete
+  const newStarredRestaurant = STARRED_RESTAURANTS.filter(
+    (restaurant) => restaurant.id !== id
+  );
+  //check if restaurant was removed
+  if (STARRED_RESTAURANTS.length === newStarredRestaurant.length) {
+    res.status(404).send("Not found");
+  }
+  STARRED_RESTAURANTS = newStarredRestaurant;
+  res.sendStatus(200);
+});
 
 /**
  * Feature 10: Updating your comment of a starred restaurant.
  */
+router.put("/:id", (req, res) => {
+  const id = req.params;
+  const { comment } = req.body;
 
+  const restaurant = STARRED_RESTAURANTS.find(
+    (restaurant) => restaurant.id === id
+  );
 
+  if (!restaurant) {
+    res.sendStatus(404);
+    return;
+  }
+  restaurant.comment = comment;
+  res.sendStatus(200);
+});
 
 module.exports = router;
