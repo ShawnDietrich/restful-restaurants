@@ -49,7 +49,7 @@ router.get("/", (req, res) => {
  * Feature 7: Getting a specific starred restaurant.
  */
 router.get("/:id", (req, res) => {
-  const id = req.params;
+  const { id } = req.params;
 
   const restaurant = ALL_RESTAURANTS.find((restaurant) => restaurant.id === id);
 
@@ -65,11 +65,11 @@ router.get("/:id", (req, res) => {
  */
 router.post("/", (req, res) => {
   //read in name of restaurant
-  const { name, comment } = req.body;
+  const { id } = req.body;
 
   //find the restaurant in the list first
-  const foundRestaurant = STARRED_RESTAURANTS.find(
-    (restaurant) => restaurant.name === name
+  const foundRestaurant = ALL_RESTAURANTS.find(
+    (restaurant) => restaurant.id === id
   );
 
   if (!foundRestaurant) {
@@ -81,30 +81,35 @@ router.post("/", (req, res) => {
   const newId = uuidv4();
   //create a new record for the starred restaurant
   const starredRestaurant = {
-    id: foundRestaurant.id,
-    restaurantId: newId,
-    comment: comment,
+    id: newId,
+    restaurantId: foundRestaurant.id,
+    comment: null,
   };
   //push the new record to the starred restaurant array
   STARRED_RESTAURANTS.push(starredRestaurant);
 
   //send result to the frontend
-  res.json(starredRestaurant);
+  res.status(200).send({
+    id: starredRestaurant.id,
+    comment: starredRestaurant.comment,
+    name: foundRestaurant.name,
+  });
 });
 
 /**
  * Feature 9: Deleting from your list of starred restaurants.
  */
 router.delete("/:id", (req, res) => {
-  const id = req.params;
-
+  const { id } = req.params;
   //filter out the restauratnt to delete
   const newStarredRestaurant = STARRED_RESTAURANTS.filter(
     (restaurant) => restaurant.id !== id
   );
+
   //check if restaurant was removed
   if (STARRED_RESTAURANTS.length === newStarredRestaurant.length) {
-    res.status(404).send("Not found");
+    res.sendStatus(404);
+    return;
   }
   STARRED_RESTAURANTS = newStarredRestaurant;
   res.sendStatus(200);
@@ -114,7 +119,7 @@ router.delete("/:id", (req, res) => {
  * Feature 10: Updating your comment of a starred restaurant.
  */
 router.put("/:id", (req, res) => {
-  const id = req.params;
+  const { id } = req.params;
   const { comment } = req.body;
 
   const restaurant = STARRED_RESTAURANTS.find(
